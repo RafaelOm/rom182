@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nextcloud-s3-server
+  labels:
+    app: nextcloud
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      pod-label: nextcloud-s3-server-pod
+  template:
+    metadata:
+      labels:
+        pod-label: nextcloud-s3-server-pod
+    spec:
+      containers:
+      - name: nextcloud
+        image: nextcloud:19
+        env:
+        - name: MYSQL_DATABASE
+          value: nextcloud
+        - name: MYSQL_USER
+          value: nextcloud
+        - name: MYSQL_PASSWORD
+          value: passw0rd1
+        - name: MYSQL_HOST
+          value: 10.48.24.107:3306
+        - name: OBJECTSTORE_S3_HOST
+          value: ams3.digitaloceanspaces.com
+        - name: OBJECTSTORE_S3_BUCKET
+          value: pruebaarso
+        - name: OBJECTSTORE_S3_KEY
+          value: 6CFGO3W3VO3QAABOBM37
+        - name: OBJECTSTORE_S3_SECRET
+          value: Wkcm10020fmK6Q/WC9/afTHqJ1cfGaf3lK685otEJcc
+        - name: OBJECTSTORE_S3_PORT
+          value: '443'
+        - name: OBJECTSTORE_S3_SSL
+          value: 'true'
+        - name: OBJECTSTORE_S3_USEPATH_STYLE
+          value: 'true'
+  
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextcloud-s3-server
+  labels:
+    app: nextcloud
+spec:
+  type: LoadBalancer
+  selector:
+    pod-label: nextcloud-s3-server-pod
+  ports:
+  - protocol: TCP
+    port: 80

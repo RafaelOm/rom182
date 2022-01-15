@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nextcloud-nfs-server
+  labels:
+    app: nextcloud
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      pod-label: nextcloud-nfs-server-pod
+  template:
+    metadata:
+      labels:
+        pod-label: nextcloud-nfs-server-pod
+    spec:
+      containers:
+      - name: nextcloud
+        image: nextcloud:19
+        env:
+        - name: MYSQL_DATABASE
+          value: nextcloud
+        - name: MYSQL_USER
+          value: nextcloud
+        - name: MYSQL_PASSWORD
+          value: passw0rd1
+        - name: MYSQL_HOST
+          value: 10.28.11.71:3306
+        - name: NEXTCLOUD_DATA_DIR
+          value: /var/www/html/data
+        lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/sh", "-c", "chown www-data:www-data /var/www/html/data"]
+        volumeMounts:
+          - name: my-pvc-nfs
+            mountPath: /var/www/html/data
+      volumes:
+      - name: my-pvc-nfs
+        persistentVolumeClaim:
+          claimName: nfs
+   
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nextcloud-nfs-server
+  labels:
+    app: nextcloud
+spec:
+  type: LoadBalancer
+  selector:
+    pod-label: nextcloud-nfs-server-pod
+  ports:
+  - protocol: TCP
+    port: 80
